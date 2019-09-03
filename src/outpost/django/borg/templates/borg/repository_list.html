@@ -1,0 +1,71 @@
+{% extends "outpost/base.html" %}
+
+{% load i18n %}
+
+{% block content %}
+<div class="page-header">
+  <div class="btn-group pull-right">
+    <a href="{% url 'borg:repository-create' %}" class="btn btn-info">
+      <span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>
+      {% trans "Add repository" %}
+    </a>
+  </div>
+  <h1>
+    {% trans "Your repositories" %}
+  </h1>
+</div>
+<h3>{{ server }}</h3>
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>{% trans "Name" %}</th>
+      <th>{% trans "Updated" %}</th>
+      <th>{% trans "Usage" %}</th>
+      <th>{% trans "Raw" %}</th>
+      <th>{% trans "Compressed" %}</th>
+      <th>{% trans "Deduplicated" %}</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for repository in object_list %}
+    <tr>
+      <th scope="row">
+        <a href="{% url "borg:repository-detail" pk=repository.pk %}">
+          {{ repository.name }}
+        </a>
+      </th>
+      <td>{{ repository.updated |date:"long" }}</td>
+      <td>{{ repository.free |filesizeformat }}</td>
+      <td>
+        <div class="progress">
+          <div class="progress-bar progress-bar-info" role="progressbar" aria-valuenow="{{ repository.server.used_ratio |floatformat:3 }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ repository.server.used_ratio |floatformat:0}}%;">
+            {{ repository.server.used_ratio |floatformat:3 }}% ({{ repository.server.used |filesizeformat }})
+          </div>
+        </div>
+      </td>
+      <td>{{ repository.raw |filesizeformat }}</td>
+      <td>
+        <div class="progress">
+          <div class="progress-bar progress-bar-info" role="progressbar" aria-valuenow="{{ repository.compressed_ratio |floatformat:3 }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ repository.compressed_ratio |floatformat:0}}%;">
+            {{ repository.compressed_ratio |floatformat:3 }}% ({{ repository.compressed |filesizeformat }})
+          </div>
+        </div>
+      </td>
+      <td>
+        <div class="progress">
+          <div class="progress-bar progress-bar-info" role="progressbar" aria-valuenow="{{ repository.deduplicated_ratio |floatformat:3 }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ repository.deduplicated_ratio |floatformat:0}}%;">
+            {{ repository.deduplicated_ratio |floatformat:3 }}% ({{ repository.deduplicated |filesizeformat }})
+          </div>
+        </div>
+      </td>
+      <td>
+        <a href="{% url 'borg:repository-delete' pk=repository.pk %}" class="text-danger">
+          <span class="glyphicon glyphicon-remove-sign" aria-hidden="true"></span>
+        </a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,9 @@
+{% load i18n %}
+{% if request.user.is_authenticated %}
+<li>
+  <a href="{% url 'borg:repository' %}">
+    <span class="glyphicon glyphicon-duplicate"></span>
+    {% trans 'Backup' %}
+  </a>
+</li>
+{% endif %}

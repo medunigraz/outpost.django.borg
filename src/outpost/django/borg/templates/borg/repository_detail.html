@@ -1,0 +1,74 @@
+{% extends "outpost/base.html" %}
+
+{% load i18n %}
+{% load humanize %}
+
+{% block content %}
+<div class="page-header">
+  <h1>
+    {% blocktrans with name=repository.name %}
+    Repository {{ name }}
+    {% endblocktrans %}
+  </h1>
+</div>
+<div class="alert alert-info" role="alert">
+  <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
+  {% blocktrans %}
+  You can use this repository to backup your data by calling Borg backup:
+  {% endblocktrans %}
+  <pre><code>borg create --json --stats {{ object.server.username }}@{{ object.server.host.name }}:{{ object.server.path }}/{{ object.name}}::'{hostname}-{now}' [paths] |curl -H "Content-Type: application/json" -X POST -d @- {{ request.scheme }}://{{ request.get_host }}{% url "borg:repository-status-update" secret=object.secret %}</code></pre>
+  {% blocktrans %}
+  If you do not want to use the monitoring functionality of our services, simply omit the <code>curl</code>-Call.
+  {% endblocktrans %}
+</div>
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>{% trans "Name" %}</th>
+      <th>{% trans "Start" %}</th>
+      <th>{% trans "End" %}</th>
+      <th>{% trans "Duration" %}</th>
+      <th>{% trans "Files" %}</th>
+      <th>{% trans "Size" %}</th>
+      <th>{% trans "Compressed" %}</th>
+      <th>{% trans "Deduplicated" %}</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for archive in object.archive_set.all %}
+    <tr>
+      <th scope="row">
+        <a href="">
+          {{ archive.name }}
+        </a>
+      </th>
+      <td>>{{ archive.start |date:"long" }}</td>
+      <td>>{{ archive.end |date:"long" }}</td>
+      <td>>{{ archive.duration }}</td>
+      <td>{{ archive.files |intcomma }}</td>
+      <td>{{ archive.raw |filesizeformat }}</td>
+      <td>
+        <div class="progress">
+          <div class="progress-bar progress-bar-info" role="progressbar" aria-valuenow="{{ archive.compressed_ratio |floatformat:3 }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ archive.compressed_ratio |floatformat:0}}%;">
+            {{ archive.compressed_ratio |floatformat:3 }}% ({{ archive.compressed |filesizeformat }})
+          </div>
+        </div>
+      </td>
+      <td>
+        <div class="progress">
+          <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="{{ archive.deduplicated_ratio |floatformat:3 }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ archive.deduplicated_ratio |floatformat:0}}%;">
+            {{ archive.deduplicated_ratio |floatformat:3 }}% ({{ archive.deduplicated |filesizeformat }})
+          </div>
+        </div>
+      </td>
+      <td>
+        <a href="">
+          <span class="glyphicon glyphicon-remove-sign" aria-hidden="true"></span>
+        </a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
