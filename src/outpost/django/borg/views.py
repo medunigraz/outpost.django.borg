@@ -78,7 +78,7 @@ class StatusUpdateView(CsrfExemptMixin, JsonRequestResponseMixin, View):
         except ValidationError as e:
             return HttpResponseBadRequest(str(e))
         repository = get_object_or_404(models.Repository, secret=kwargs["secret"])
-        archive = models.Archive(repository=repository.object)
+        archive = models.Archive(repository=repository)
         archive.id = self.request_json["archive"]["id"]
         archive.name = self.request_json["archive"]["name"]
         archive.start = iso8601.parse_date(self.request_json["archive"]["start"])
