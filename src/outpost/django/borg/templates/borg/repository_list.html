@@ -35,7 +35,7 @@
           {{ repository.name }}
         </a>
       </th>
-      <td>{{ repository.updated |date:"long" }}</td>
+      <td>{{ repository.updated |date:"SHORT_DATETIME_FORMAT" }}</td>
       <td>{{ repository.free |filesizeformat }}</td>
       <td>
         <div class="progress">
@@ -44,18 +44,17 @@
           </div>
         </div>
       </td>
-      <td>{{ repository.raw |filesizeformat }}</td>
       <td>
         <div class="progress">
-          <div class="progress-bar progress-bar-info" role="progressbar" aria-valuenow="{{ repository.compressed_ratio |floatformat:3 }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ repository.compressed_ratio |floatformat:0}}%;">
-            {{ repository.compressed_ratio |floatformat:3 }}% ({{ repository.compressed |filesizeformat }})
+          <div class="progress-bar progress-bar-info" role="progressbar" aria-valuenow="{{ repository.compression_ratio |floatformat:3 }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ repository.compression_ratio |floatformat:0 }}%;">
+            {{ repository.compression_ratio |floatformat:3 }}% ({{ repository.compressed |filesizeformat }})
           </div>
         </div>
       </td>
       <td>
         <div class="progress">
-          <div class="progress-bar progress-bar-info" role="progressbar" aria-valuenow="{{ repository.deduplicated_ratio |floatformat:3 }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ repository.deduplicated_ratio |floatformat:0}}%;">
-            {{ repository.deduplicated_ratio |floatformat:3 }}% ({{ repository.deduplicated |filesizeformat }})
+          <div class="progress-bar progress-bar-info" role="progressbar" aria-valuenow="{{ repository.deduplication_ratio |floatformat:3 }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ repository.deduplication_ratio |floatformat:0 }}%;">
+            {{ repository.deduplication_ratio |floatformat:3 }}% ({{ repository.deduplicated |filesizeformat }})
           </div>
         </div>
       </td>
