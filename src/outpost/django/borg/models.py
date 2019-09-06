@@ -63,6 +63,10 @@ class Server(models.Model):
             return 0
         return (self.used / self.size) * 100
 
+    @property
+    def repository(self):
+        return Path(self.path).joinpath(settings.BORG_REPOSITORY_DIRECTORY).as_posix()
+
 
 class Repository(TimeStampedModel):
     def generate_secret():
