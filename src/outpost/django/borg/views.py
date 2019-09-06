@@ -91,9 +91,9 @@ class StatusUpdateView(CsrfExemptMixin, JsonRequestResponseMixin, View):
         ]
         archive.save()
         repository.updated = iso8601.parse_date(self.request_json["repository"]["last_modified"])
-        repository.raw = self.request_json["cache"]["total_size"]
-        repository.compressed = self.request_json["cache"]["total_csize"]
-        repository.deduplicated = self.request_json["cache"]["unique_csize"]
+        repository.raw = self.request_json["cache"]["stats"]["total_size"]
+        repository.compressed = self.request_json["cache"]["stats"]["total_csize"]
+        repository.deduplicated = self.request_json["cache"]["stats"]["unique_csize"]
         repository.save()
         perms = get_users_with_perms(
             repository, only_with_perms_in=("borg.change_repository",)

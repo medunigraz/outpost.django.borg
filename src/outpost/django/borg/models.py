@@ -121,13 +121,13 @@ class Repository(TimeStampedModel):
     def compression_ratio(self):
         if self.compressed == 0:
             return 0
-        return (1 - (self.raw / self.compressed)) * 100
+        return (1 - (self.compressed / self.raw)) * 100
 
     @property
     def deduplication_ratio(self):
         if self.deduplicated == 0:
             return 0
-        return (1 - (self.compressed / self.deduplicated)) * 100
+        return (1 - (self.deduplicated / self.compressed)) * 100
 
 
 class Archive(models.Model):
@@ -151,13 +151,13 @@ class Archive(models.Model):
     def compression_ratio(self):
         if self.compressed == 0:
             return 0
-        return (1 - (self.raw / self.compressed)) * 100
+        return (1 - (self.compressed / self.raw)) * 100
 
     @property
     def deduplication_ratio(self):
         if self.deduplicated == 0:
             return 0
-        return (1 - (self.compressed / self.deduplicated)) * 100
+        return (1 - (self.deduplicated / self.compressed)) * 100
 
     @property
     def duration(self):
