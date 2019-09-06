@@ -1,5 +1,6 @@
 import io
-import paramiko
+import asyncssh
+import asyncio
 import logging
 from datetime import timedelta
 
@@ -17,25 +18,37 @@ class BorgStatusTask(PeriodicTask):
 
     def run(self, **kwargs):
         for server in Server.objects.filter(enabled=True):
-            ssh = paramiko.SSHClient()
-            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            private_key = paramiko.pkey.PKey.from_private_key(
-                io.BytesIO(server.private_key)
-            )
             try:
-                ssh.connect(server.host, username=server.username, pkey=private_key)
-            except paramiko.SSHException as e:
-                logger.error(f"Could not connect to host {server.host}: {e}")
-                ssh.close()
+                result = asyncio.run(self.stats(server))
+            except asyncssh.Error as e:
+                logger.error(f"Could not connect to {server}: {e}")
                 continue
-            inp, out, err = ssh.exec_command(
-                f"df --output=file,size,used,avail -B1 {server.path}"
-            )
-            for line in out:
+            for line in result.splitlines():
                 if line.startswith(server.path):
                     (_, size, used, avail) = line.split()
                     server.size = int(size)
                     server.used = int(used)
                     server.save()
                     break
-            ssh.close()
+
+    async def stats(self, server):
+        options = {
+            "username": server.username,
+            "client_keys": [asyncssh.import_private_key(server.private_key)],
+            "known_hosts": [
+                [asyncssh.import_public_key(server.host_key)],
+                [],
+                [],
+                [],
+                [],
+                [],
+                [],
+            ]
+        }
+        async with asyncssh.connect(f"{server.host.name}.medunigraz.at", **options) as conn:
+            result = await conn.run(
+                f"df --output=file,size,used,avail -B1 {server.repository}",
+                check=True
+            )
+            return result.stdout
+
