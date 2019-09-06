@@ -95,9 +95,7 @@ class StatusUpdateView(CsrfExemptMixin, JsonRequestResponseMixin, View):
         repository.compressed = self.request_json["cache"]["stats"]["total_csize"]
         repository.deduplicated = self.request_json["cache"]["stats"]["unique_csize"]
         repository.save()
-        perms = get_users_with_perms(
-            repository, only_with_perms_in=("borg.change_repository",)
-        )
+        perms = get_users_with_perms(repository)
         for user in perms:
             assign_perm("borg.change_archive", user, archive)
             assign_perm("borg.delete_archive", user, archive)
