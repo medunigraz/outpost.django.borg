@@ -47,9 +47,11 @@ class RepositoryCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateVi
     success_url = reverse("borg:repository")
 
     def form_valid(self, form):
+        res = super().form_valid(form)
+        import pudb; pu.db
         assign_perm("borg.change_repository", self.request.user, form.instance)
         assign_perm("borg.delete_repository", self.request.user, form.instance)
-        return super().form_valid(form)
+        return res
 
 
 class RepositoryUpdateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
