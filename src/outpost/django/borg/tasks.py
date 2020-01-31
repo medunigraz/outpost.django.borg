@@ -43,12 +43,12 @@ class BorgStatusTask(PeriodicTask):
                 [],
                 [],
                 [],
-            ]
+            ],
         }
-        async with asyncssh.connect(f"{server.host.name}.medunigraz.at", **options) as conn:
+        async with asyncssh.connect(
+            f"{server.host.name}.medunigraz.at", **options
+        ) as conn:
             result = await conn.run(
-                f"df --output=file,size,used,avail -B1 {server.repository}",
-                check=True
+                f"df --output=file,size,used,avail -B1 {server.repository}", check=True
             )
             return result.stdout
-

@@ -98,7 +98,12 @@ class Repository(TimeStampedModel):
 
     @property
     def path(self):
-        return Path(self.server.path).joinpath(settings.BORG_REPOSITORY_DIRECTORY).joinpath(self.name).as_posix()
+        return (
+            Path(self.server.path)
+            .joinpath(settings.BORG_REPOSITORY_DIRECTORY)
+            .joinpath(self.name)
+            .as_posix()
+        )
 
     @property
     def fingerprint(self):

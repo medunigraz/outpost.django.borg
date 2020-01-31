@@ -91,7 +91,9 @@ class StatusUpdateView(CsrfExemptMixin, JsonRequestResponseMixin, View):
             "deduplicated_size"
         ]
         archive.save()
-        repository.updated = iso8601.parse_date(self.request_json["repository"]["last_modified"])
+        repository.updated = iso8601.parse_date(
+            self.request_json["repository"]["last_modified"]
+        )
         repository.raw = self.request_json["cache"]["stats"]["total_size"]
         repository.compressed = self.request_json["cache"]["stats"]["total_csize"]
         repository.deduplicated = self.request_json["cache"]["stats"]["unique_csize"]
