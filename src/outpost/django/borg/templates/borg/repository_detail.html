@@ -30,38 +30,100 @@
         <li><a href="#step2" data-toggle="tab" role="tab" data-step="2">Step 2: Initialization</a></li>
         <li><a href="#step3" data-toggle="tab" role="tab" data-step="3">Step 3: Backup</a></li>
         <li><a href="#step4" data-toggle="tab" role="tab" data-step="4">Step 4: Verify</a></li>
-        <li><a href="#step5" data-toggle="tab" role="tab" data-step="5">Step 5: Clean up</a></li>
+        <li><a href="#step5" data-toggle="tab" role="tab" data-step="5">Step 5: Automation</a></li>
       </ul>
     </div>
   </div>
   <div class="tab-content">
     <div class="tab-pane fade in active" id="step1">
-      <div class="well"> <h2>Step 1: SSH Connection</h2> Add another step here..</div>
+      <div class="well">
+        <h2>Step 1: SSH Connection</h2>
+        {% blocktrans %}
+        You need to configure your local SSH client to use public key authentication against the borg backup server. Add the following
+        lines to the file <code>~/.ssh/config</code> and replace <code>&lt;key&gt;</code> with the name of the private key that matches
+        the keys you specified when this repository was created.
+        {% endblocktrans %}
+        <pre><code>Host {{ object.server.host.name }}
+    IdentityFile ~/.ssh/&lt;key&gt;
+    User {{ object.server.username }}
+    IdentitiesOnly yes</code></pre>
+      </div>
       <a class="btn btn-default next" href="#">Continue</a>
     </div>
     <div class="tab-pane fade" id="step2">
-      <div class="well"> <h2>Step 2: Initialization</h2> Add another step here..</div>
+      <div class="well">
+        <h2>Step 2: Initialization</h2>
+        {% blocktrans %}
+        Before creating the first backup, you need to initialize the borg repository with your own secret crendentials. This is necessary
+        to ensure the privacy of your data as the encrpytion key never reaches the borg backup server. Replace &lt;passphrase&gt; with your
+        passphrase.
+        {% endblocktrans %}
+        <pre><code>export BORG_PASSPHRASE=&lt;passphrase&gt;</code></pre>
+        {% blocktrans %}
+        Now initialize the borg backup repository on the remote server.
+        {% endblocktrans %}
+        <pre><code>borg init {{ object.server.username }}@{{ object.server.host.name }}:{{ object.server.path }}{{ object.name}}</code></pre>
+        {% blocktrans %}
+        Please store the repository encryption key somewhere safe. Without it, recovery of your data is impossible.
+        {% endblocktrans %}
+      </div>
       <a class="btn btn-default next" href="#">Continue</a>
     </div>
     <div class="tab-pane fade" id="step3">
       <div class="well">
         <h2>Step 3: Backup</h2>
         {% blocktrans %}
-        You can use this repository to backup your data by calling Borg backup:
+        You can now use this repository to backup your data by calling borg backup. You will need to replace <code>&lt;path&gt;</code> with
+        the actual local filesystem path that you want to backup. More than one paths can be specified if necessary.
         {% endblocktrans %}
-        <pre><code>borg create --json --stats {{ object.server.username }}@{{ object.server.host.name }}:{{ object.server.path }}/{{ object.name}}::'{hostname}-{now}' [paths] |curl -H "Content-Type: application/json" -X POST -d @- {{ request.scheme }}://{{ request.get_host }}{% url "borg:repository-status-update" secret=object.secret %}</code></pre>
+        <pre><code>borg create --json --stats {{ object.server.username }}@{{ object.server.host.name }}:{{ object.server.path }}{{ object.name}}::"{hostname}-{now}" &lt;path&gt; [&lt;path&gt; ...] |curl -H "Content-Type: application/json" -X POST -d @- {{ request.scheme }}://{{ request.get_host }}{% url "borg:repository-status-update" secret=object.secret %}</code></pre>
         {% blocktrans %}
-        If you do not want to use the monitoring functionality of our services, simply omit the <code>curl</code>-Call.
+        If you do not want to use the monitoring functionality of our services, simply omit the <code>curl</code>-call at the end.
         {% endblocktrans %}
       </div>
       <a class="btn btn-default next" href="#">Continue</a>
     </div>
     <div class="tab-pane fade" id="step4">
-      <div class="well"> <h2>Step 4: Verify</h2> Add another almost done step here..</div>
+      <div class="well">
+        <h2>Step 4: Automation</h2>
+        {% blocktrans %}
+        To verify that your backup works, you can list all backups in the repository.
+        {% endblocktrans %}
+        <pre><code>borg list {{ object.server.username }}@{{ object.server.host.name }}:{{ object.server.path }}{{ object.name}}</code></pre>
+      </div>
       <a class="btn btn-default next" href="#">Continue</a>
     </div>
     <div class="tab-pane fade" id="step5">
-      <div class="well"> <h2>Step 5: Clean up</h2> You're Done!</div>
+      <div class="well">
+        <h2>Step 5: Automation</h2>
+        {% blocktrans %}
+        To ensure backups are taken at a regular interval you can set up systemd timers. Create a file <code>/etc/systemd/system/backup.timer</code>
+        with the following content.
+        {% endblocktrans %}
+        <pre><code>[Unit]
+Description=Run borg backup
+
+[Timer]
+OnCalendar=daily
+Persistent=true
+
+[Install]
+WantedBy=timers.target</code></pre>
+        {% blocktrans %}
+        The timer needs an accompanying service file located at <code>/etc/systemd/system/backup.service</code> with the following content.
+        {% endblocktrans %}
+        <pre><code>[Unit]
+Description=Run borg backup
+
+[Service]
+Type=oneshot
+Environment=BORG_PASSPHRASE=&lt;passphrase&gt;
+ExecStart=/usr/bin/sh -c 'borg create --json --stats {{ object.server.username }}@{{ object.server.host.name }}:{{ object.server.path }}{{ object.name}}::"{hostname}-{now}" &lt;path&gt; [&lt;path&gt; ...] |curl -H "Content-Type: application/json" -X POST -d @- {{ request.scheme }}://{{ request.get_host }}{% url "borg:repository-status-update" secret=object.secret %}'</code></pre>
+        {% blocktrans %}
+        Again, replace <code>&lt;path&gt;</code> with the path you want to backup and &lt;passphrase&gt; with your secret passphrase.
+        {% endblocktrans %}
+
+      </div>
     </div>
   </div>
 </div>
