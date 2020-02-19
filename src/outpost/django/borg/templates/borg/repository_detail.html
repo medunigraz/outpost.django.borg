@@ -53,17 +53,20 @@
       <div class="well">
         {% blocktrans %}
         Before creating the first backup, you need to initialize the borg repository with your own secret crendentials. This is necessary
-        to ensure the privacy of your data as the encrpytion key never reaches the borg backup server. Replace &lt;passphrase&gt; with your
+        to ensure the privacy of your data as the encrpytion key never reaches the borg backup server. Replace <code>&lt;passphrase&gt;</code> with your
         passphrase.
         {% endblocktrans %}
         <pre><code>export BORG_PASSPHRASE=&lt;passphrase&gt;</code></pre>
         {% blocktrans %}
         Now initialize the borg backup repository on the remote server.
         {% endblocktrans %}
-        <pre><code>borg init {{ object.server.host.name }}:{{ object.path }}</code></pre>
+        <pre><code>borg init -e repokey {{ object.server.host.name }}:{{ object.path }}</code></pre>
         {% blocktrans %}
-        Please store the repository encryption key somewhere safe. Without it, recovery of your data is impossible.
+        Please store the repository encryption key somewhere safe. Without it, recovery of your data is impossible. You should also keep a backup copy of your
+        repository key alongside your passphrase. Export it to a files by replacing <code>&lt;output-file&gt;</code> in the command below and store it in safe
+        location.
         {% endblocktrans %}
+        <pre><code>borg key export {{ object.server.host.name }}:{{ object.path }} &lt;output-file&gt;</code></pre>
       </div>
     </div>
     <div class="tab-pane fade" id="step3">
@@ -91,7 +94,7 @@ borg list {{ object.server.host.name }}:{{ object.path }}</code></pre>
     <div class="tab-pane fade" id="step5">
       <div class="well">
         {% blocktrans %}
-        It is recommended to periodically prune old backups to safe space. In order to keep a certain numbe rof daily, weekly, monthly and even yearly backups,
+        It is recommended to periodically prune old backups to safe space. In order to keep a certain number of daily, weekly, monthly and even yearly backups,
         please specify a number of backups for each interval to be kept.
         {% endblocktrans %}
         <pre><code>export BORG_PASSPHRASE=&lt;passphrase&gt;
@@ -101,8 +104,9 @@ borg prune --keep-daily=7 --keep-weekly=4 --keep-monthly=12 --keep-yearly=2 --pr
     <div class="tab-pane fade" id="step6">
       <div class="well">
         {% blocktrans %}
-        To ensure backups are taken at a regular interval you can set up <a href="https://www.freedesktop.org/software/systemd/man/systemd.timer.html" target="_blank">systemd timers.</a> Create a file <code>/etc/systemd/system/backup.timer</code>
-        with the following content.
+        To ensure backups are taken at a regular interval you can set up
+        <a href="https://www.freedesktop.org/software/systemd/man/systemd.timer.html" target="_blank">systemd timers.</a> Create a file
+        <code>/etc/systemd/system/backup.timer</code> with the following content.
         {% endblocktrans %}
         <pre><code>[Unit]
 Description=Run borg backup
@@ -124,9 +128,8 @@ Type=oneshot
 Environment=BORG_PASSPHRASE=&lt;passphrase&gt;
 ExecStart=/usr/bin/sh -c 'borg create --json --stats {{ object.server.host.name }}:{{ object.path }}::"{hostname}-{now}" &lt;path&gt; [&lt;path&gt; ...] |curl -H "Content-Type: application/json" -X POST -d @- {{ request.scheme }}://{{ request.get_host }}{% url "borg:repository-status-update" secret=object.secret %} && borg prune --keep-daily=7 --keep-weekly=4 --keep-monthly=12 --keep-yearly=2 --prefix="{hostname}-" {{ object.server.host.name }}:{{ object.path }}'</code></pre>
         {% blocktrans %}
-        Again, replace <code>&lt;path&gt;</code> with the path you want to backup and &lt;passphrase&gt; with your secret passphrase.
+        Again, replace <code>&lt;path&gt;</code> with the path you want to backup and <code>&lt;passphrase&gt;</code> with your secret passphrase.
         {% endblocktrans %}
-
       </div>
     </div>
   </div>
