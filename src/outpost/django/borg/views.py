@@ -41,7 +41,7 @@ class RepositoryDetailView(LoginRequiredMixin, PermissionRequiredMixin, DetailVi
 
 class RepositoryCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
     model = models.Repository
-    fields = ("server", "name", "public_key")
+    fields = ("server", "name", "append_only", "public_key")
     permission_required = "borg.add_repository"
     permission_object = None
     success_url = reverse("borg:repository")

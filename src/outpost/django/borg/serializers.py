@@ -8,7 +8,7 @@ class RepositorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Repository
-        fields = ("name", "openssh", "path")
+        fields = ("name", "openssh", "path", "append_only")
 
 
 class ServerSerializer(serializers.ModelSerializer):
