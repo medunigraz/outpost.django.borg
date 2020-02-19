@@ -7,14 +7,12 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('borg', '0002_auto_20200219_1135'),
-    ]
+    dependencies = [("borg", "0002_auto_20200219_1135")]
 
     operations = [
         migrations.AlterField(
-            model_name='repository',
-            name='append_only',
-            field=models.BooleanField(default=False, help_text=''),
-        ),
+            model_name="repository",
+            name="append_only",
+            field=models.BooleanField(default=False, help_text=""),
+        )
     ]

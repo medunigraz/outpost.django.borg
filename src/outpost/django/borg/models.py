@@ -82,7 +82,10 @@ class Repository(TimeStampedModel):
         ),
     )
     secret = models.CharField(
-        max_length=settings.BORG_SECRET_LENGTH, default=generate_secret, unique=True, editable=False
+        max_length=settings.BORG_SECRET_LENGTH,
+        default=generate_secret,
+        unique=True,
+        editable=False,
     )
     append_only = models.BooleanField(default=False, help_text=_(""))
     public_key = models.TextField(validators=(PublicKeyValidator(),))
