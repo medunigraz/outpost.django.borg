@@ -148,7 +148,7 @@ class Archive(models.Model):
     deduplicated = models.BigIntegerField(default=0)
 
     class Meta:
-        ordering = ("start", "end")
+        ordering = ("-start", "-end")
 
     def __str__(self):
         return self.name
