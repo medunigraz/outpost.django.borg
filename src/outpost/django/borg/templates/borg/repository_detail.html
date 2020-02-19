@@ -16,28 +16,28 @@
   {% trans "How to set up your backup" %}
 </h3>
 <hr/>
-<div id="tutorial">
+<div id="tutorial" class="hidden">
   <div class="progress">
-    <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="1" aria-valuemin="1" aria-valuemax="5" style="width: 20%;">
-      Step 1 of 5
+    <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="1" aria-valuemin="1" aria-valuemax="6" style="width: 0%;">
+      Step <span class="step"></span> of <span class="steps"></span>
     </div>
   </div>
 
   <div class="navbar">
     <div class="navbar-inner">
       <ul class="nav nav-pills" role="tablist">
-        <li class="active"><a href="#step1" data-toggle="tab" role="tab" data-step="1">Step 1: SSH Connection</a></li>
-        <li><a href="#step2" data-toggle="tab" role="tab" data-step="2">Step 2: Initialization</a></li>
-        <li><a href="#step3" data-toggle="tab" role="tab" data-step="3">Step 3: Backup</a></li>
-        <li><a href="#step4" data-toggle="tab" role="tab" data-step="4">Step 4: Verify</a></li>
-        <li><a href="#step5" data-toggle="tab" role="tab" data-step="5">Step 5: Automation</a></li>
+        <li class="active"><a href="#step1" data-toggle="tab" role="tab" data-step="1">{% trans "Step 1: SSH Connection" %}</a></li>
+        <li><a href="#step2" data-toggle="tab" role="tab" data-step="2">{% trans "Step 2: Initialization" %}</a></li>
+        <li><a href="#step3" data-toggle="tab" role="tab" data-step="3">{% trans "Step 3: Backup" %}</a></li>
+        <li><a href="#step4" data-toggle="tab" role="tab" data-step="4">{% trans "Step 4: Verify" %}</a></li>
+        <li><a href="#step5" data-toggle="tab" role="tab" data-step="5">{% trans "Step 5: Pruning" %}</a></li>
+        <li><a href="#step6" data-toggle="tab" role="tab" data-step="6">{% trans "Step 6: Automation" %}</a></li>
       </ul>
     </div>
   </div>
   <div class="tab-content">
     <div class="tab-pane fade in active" id="step1">
       <div class="well">
-        <h2>Step 1: SSH Connection</h2>
         {% blocktrans %}
         You need to configure your local SSH client to use public key authentication against the borg backup server. Add the following
         lines to the file <code>~/.ssh/config</code> and replace <code>&lt;key&gt;</code> with the name of the private key that matches
@@ -48,11 +48,9 @@
     User {{ object.server.username }}
     IdentitiesOnly yes</code></pre>
       </div>
-      <a class="btn btn-default next" href="#">Continue</a>
     </div>
     <div class="tab-pane fade" id="step2">
       <div class="well">
-        <h2>Step 2: Initialization</h2>
         {% blocktrans %}
         Before creating the first backup, you need to initialize the borg repository with your own secret crendentials. This is necessary
         to ensure the privacy of your data as the encrpytion key never reaches the borg backup server. Replace &lt;passphrase&gt; with your
@@ -62,42 +60,48 @@
         {% blocktrans %}
         Now initialize the borg backup repository on the remote server.
         {% endblocktrans %}
-        <pre><code>borg init {{ object.server.username }}@{{ object.server.host.name }}:{{ object.server.path }}{{ object.name}}</code></pre>
+        <pre><code>borg init {{ object.server.host.name }}:{{ object.path }}</code></pre>
         {% blocktrans %}
         Please store the repository encryption key somewhere safe. Without it, recovery of your data is impossible.
         {% endblocktrans %}
       </div>
-      <a class="btn btn-default next" href="#">Continue</a>
     </div>
     <div class="tab-pane fade" id="step3">
       <div class="well">
-        <h2>Step 3: Backup</h2>
         {% blocktrans %}
         You can now use this repository to backup your data by calling borg backup. You will need to replace <code>&lt;path&gt;</code> with
         the actual local filesystem path that you want to backup. More than one paths can be specified if necessary.
         {% endblocktrans %}
-        <pre><code>borg create --json --stats {{ object.server.username }}@{{ object.server.host.name }}:{{ object.server.path }}{{ object.name}}::"{hostname}-{now}" &lt;path&gt; [&lt;path&gt; ...] |curl -H "Content-Type: application/json" -X POST -d @- {{ request.scheme }}://{{ request.get_host }}{% url "borg:repository-status-update" secret=object.secret %}</code></pre>
+        <pre><code>export BORG_PASSPHRASE=&lt;passphrase&gt;
+borg create --json --stats {{ object.server.host.name }}:{{ object.path }}::"{hostname}-{now}" &lt;path&gt; [&lt;path&gt; ...] |curl -H "Content-Type: application/json" -X POST -d @- {{ request.scheme }}://{{ request.get_host }}{% url "borg:repository-status-update" secret=object.secret %}</code></pre>
         {% blocktrans %}
         If you do not want to use the monitoring functionality of our services, simply omit the <code>curl</code>-call at the end.
         {% endblocktrans %}
       </div>
-      <a class="btn btn-default next" href="#">Continue</a>
     </div>
     <div class="tab-pane fade" id="step4">
       <div class="well">
-        <h2>Step 4: Automation</h2>
         {% blocktrans %}
         To verify that your backup works, you can list all backups in the repository.
         {% endblocktrans %}
-        <pre><code>borg list {{ object.server.username }}@{{ object.server.host.name }}:{{ object.server.path }}{{ object.name}}</code></pre>
+        <pre><code>export BORG_PASSPHRASE=&lt;passphrase&gt;
+borg list {{ object.server.host.name }}:{{ object.path }}</code></pre>
       </div>
-      <a class="btn btn-default next" href="#">Continue</a>
     </div>
     <div class="tab-pane fade" id="step5">
       <div class="well">
-        <h2>Step 5: Automation</h2>
         {% blocktrans %}
-        To ensure backups are taken at a regular interval you can set up systemd timers. Create a file <code>/etc/systemd/system/backup.timer</code>
+        It is recommended to periodically prune old backups to safe space. In order to keep a certain numbe rof daily, weekly, monthly and even yearly backups,
+        please specify a number of backups for each interval to be kept.
+        {% endblocktrans %}
+        <pre><code>export BORG_PASSPHRASE=&lt;passphrase&gt;
+borg prune --keep-daily=7 --keep-weekly=4 --keep-monthly=12 --keep-yearly=2 --prefix="{hostname}-" {{ object.server.host.name }}:{{ object.path }}</code></pre>
+      </div>
+    </div>
+    <div class="tab-pane fade" id="step6">
+      <div class="well">
+        {% blocktrans %}
+        To ensure backups are taken at a regular interval you can set up <a href="https://www.freedesktop.org/software/systemd/man/systemd.timer.html" target="_blank">systemd timers.</a> Create a file <code>/etc/systemd/system/backup.timer</code>
         with the following content.
         {% endblocktrans %}
         <pre><code>[Unit]
@@ -118,7 +122,7 @@ Description=Run borg backup
 [Service]
 Type=oneshot
 Environment=BORG_PASSPHRASE=&lt;passphrase&gt;
-ExecStart=/usr/bin/sh -c 'borg create --json --stats {{ object.server.username }}@{{ object.server.host.name }}:{{ object.server.path }}{{ object.name}}::"{hostname}-{now}" &lt;path&gt; [&lt;path&gt; ...] |curl -H "Content-Type: application/json" -X POST -d @- {{ request.scheme }}://{{ request.get_host }}{% url "borg:repository-status-update" secret=object.secret %}'</code></pre>
+ExecStart=/usr/bin/sh -c 'borg create --json --stats {{ object.server.host.name }}:{{ object.path }}::"{hostname}-{now}" &lt;path&gt; [&lt;path&gt; ...] |curl -H "Content-Type: application/json" -X POST -d @- {{ request.scheme }}://{{ request.get_host }}{% url "borg:repository-status-update" secret=object.secret %} && borg prune --keep-daily=7 --keep-weekly=4 --keep-monthly=12 --keep-yearly=2 --prefix="{hostname}-" {{ object.server.host.name }}:{{ object.path }}'</code></pre>
         {% blocktrans %}
         Again, replace <code>&lt;path&gt;</code> with the path you want to backup and &lt;passphrase&gt; with your secret passphrase.
         {% endblocktrans %}
@@ -128,6 +132,7 @@ ExecStart=/usr/bin/sh -c 'borg create --json --stats {{ object.server.username }
   </div>
 </div>
 <hr>
+{% if object.archive_set.all %}
 <table class="table table-striped">
   <thead>
     <tr>
@@ -176,6 +181,14 @@ ExecStart=/usr/bin/sh -c 'borg create --json --stats {{ object.server.username }
     {% endfor %}
   </tbody>
 </table>
+{% else %}
+<div class="alert alert-info" role="alert">
+  <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
+  {% blocktrans %}
+  No backups have been created yet.
+  {% endblocktrans %}
+</div>
+{% endif %}
 {% endblock %}
 
 {% block script %}

@@ -20,6 +20,7 @@
     <tr>
       <th>{% trans "Name" %}</th>
       <th>{% trans "Updated" %}</th>
+      <th>{% trans "Backups" %}</th>
       <th>{% trans "Usage" %}</th>
       <th>{% trans "Raw" %}</th>
       <th>{% trans "Compressed" %}</th>
@@ -35,7 +36,12 @@
           {{ repository.name }}
         </a>
       </th>
+      {% if repository.updated %}
       <td>{{ repository.updated |date:"SHORT_DATETIME_FORMAT" }}</td>
+      {% else %}
+      <td>{% trans "Never" %}</td>
+      {% endif %}
+      <td{% if repository.archive_set.count == 0 %} class="bg-danger"{% endif %}>{{ repository.archive_set.count }}</td>
       <td>{{ repository.free |filesizeformat }}</td>
       <td>
         <div class="progress">
