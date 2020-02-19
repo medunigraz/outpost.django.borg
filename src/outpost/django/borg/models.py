@@ -82,14 +82,14 @@ class Repository(TimeStampedModel):
         ),
     )
     secret = models.CharField(
-        max_length=settings.BORG_SECRET_LENGTH, default=generate_secret, unique=True
+        max_length=settings.BORG_SECRET_LENGTH, default=generate_secret, unique=True, editable=False
     )
     append_only = models.BooleanField(default=False, help_text=_(""))
     public_key = models.TextField(validators=(PublicKeyValidator(),))
-    updated = models.DateTimeField(blank=True, null=True)
-    raw = models.BigIntegerField(default=0)
-    compressed = models.BigIntegerField(default=0)
-    deduplicated = models.BigIntegerField(default=0)
+    updated = models.DateTimeField(blank=True, null=True, editable=False)
+    raw = models.BigIntegerField(default=0, editable=False)
+    compressed = models.BigIntegerField(default=0, editable=False)
+    deduplicated = models.BigIntegerField(default=0, editable=False)
 
     class Meta:
         unique_together = (("server", "name"),)
