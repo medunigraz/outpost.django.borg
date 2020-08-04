@@ -2,6 +2,8 @@ from django.conf.urls import url
 
 from . import views
 
+app_name = "borg"
+
 urlpatterns = [
     url(r"^$", views.RepositoryListView.as_view(), name="repository"),
     url(

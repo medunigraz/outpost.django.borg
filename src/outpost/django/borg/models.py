@@ -28,7 +28,7 @@ class Server(models.Model):
         return key.export_private_key("openssh")
 
     name = models.CharField(max_length=128)
-    host = models.ForeignKey("salt.Host", related_name="borg")
+    host = models.ForeignKey("salt.Host", related_name="borg", on_delete=models.CASCADE)
     enabled = models.BooleanField(default=False)
     username = models.CharField(max_length=128, default="borg")
     path = models.CharField(max_length=128, default="/var/lib/borg")
@@ -74,7 +74,7 @@ class Repository(TimeStampedModel):
         alphabet = string.ascii_letters + string.digits
         return "".join(secrets.choice(alphabet) for i in range(length))
 
-    server = models.ForeignKey("Server")
+    server = models.ForeignKey("Server", on_delete=models.CASCADE)
     name = models.CharField(
         max_length=128,
         validators=(
@@ -141,7 +141,7 @@ class Repository(TimeStampedModel):
 
 class Archive(models.Model):
     id = models.CharField(max_length=64, primary_key=True)
-    repository = models.ForeignKey("Repository")
+    repository = models.ForeignKey("Repository", on_delete=models.CASCADE)
     name = models.CharField(max_length=128)
     start = models.DateTimeField()
     end = models.DateTimeField()
