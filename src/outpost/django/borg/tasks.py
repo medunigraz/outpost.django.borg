@@ -1,11 +1,12 @@
-import io
-import asyncssh
 import asyncio
+import io
 import logging
 from datetime import timedelta
 
+import asyncssh
 import requests
-from celery.task import PeriodicTask
+from celery import shared_task
+from django.utils.translation import gettext_lazy as _
 
 from .conf import settings
 from .models import Server
@@ -13,13 +14,13 @@ from .models import Server
 logger = logging.getLogger(__name__)
 
 
-class BorgStatusTask(PeriodicTask):
-    run_every = timedelta(minutes=30)
+class BorgTasks:
 
-    def run(self, **kwargs):
+    @shared_task(bind=True, ignore_result=True, name=f"{__name__}.Borg:status")
+    def status(task):
         for server in Server.objects.filter(enabled=True):
             try:
-                result = asyncio.run(self.stats(server))
+                result = asyncio.run(BorgTasks.stats(server))
             except asyncssh.Error as e:
                 logger.error(f"Could not connect to {server}: {e}")
                 continue
@@ -31,7 +32,7 @@ class BorgStatusTask(PeriodicTask):
                     server.save()
                     break
 
-    async def stats(self, server):
+    async def stats(server):
         options = {
             "username": server.username,
             "client_keys": [asyncssh.import_private_key(server.private_key)],
