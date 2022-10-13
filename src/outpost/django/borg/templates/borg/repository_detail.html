@@ -43,7 +43,8 @@
         lines to the file <code>~/.ssh/config</code> and replace <code>&lt;key&gt;</code> with the name of the private key that matches
         the keys you specified when this repository was created.
         {% endblocktrans %}
-        <pre><code>Host {{ object.server.host.name }}
+        <pre><code>Host borg.{{ name }}
+    Hostname {{ object.server.host.name }}
     IdentityFile ~/.ssh/&lt;key&gt;
     User {{ object.server.username }}
     IdentitiesOnly yes</code></pre>
@@ -60,13 +61,13 @@
         {% blocktrans %}
         Now initialize the borg backup repository on the remote server.
         {% endblocktrans %}
-        <pre><code>borg init -e repokey {{ object.server.host.name }}:{{ object.path }}</code></pre>
+        <pre><code>borg init -e repokey borg.{{ name }}:{{ object.path }}</code></pre>
         {% blocktrans %}
         Please store the repository encryption key somewhere safe. Without it, recovery of your data is impossible. You should also keep a backup copy of your
         repository key alongside your passphrase. Export it to a files by replacing <code>&lt;output-file&gt;</code> in the command below and store it in safe
         location.
         {% endblocktrans %}
-        <pre><code>borg key export {{ object.server.host.name }}:{{ object.path }} &lt;output-file&gt;</code></pre>
+        <pre><code>borg key export borg.{{ name }}:{{ object.path }} &lt;output-file&gt;</code></pre>
       </div>
     </div>
     <div class="tab-pane fade" id="step3">
@@ -76,7 +77,7 @@
         the actual local filesystem path that you want to backup. More than one paths can be specified if necessary.
         {% endblocktrans %}
         <pre><code>export BORG_PASSPHRASE=&lt;passphrase&gt;
-borg create --json --stats {{ object.server.host.name }}:{{ object.path }}::"{hostname}-{now}" &lt;path&gt; [&lt;path&gt; ...] |curl -H "Content-Type: application/json" -X POST -d @- {{ request.scheme }}://{{ request.get_host }}{% url "borg:repository-status-update" secret=object.secret %}</code></pre>
+borg create --json --stats borg.{{ name }}:{{ object.path }}::"{hostname}-{now}" &lt;path&gt; [&lt;path&gt; ...] |curl -H "Content-Type: application/json" -X POST -d @- {{ request.scheme }}://{{ request.get_host }}{% url "borg:repository-status-update" secret=object.secret %}</code></pre>
         {% blocktrans %}
         If you do not want to use the monitoring functionality of our services, simply omit the <code>curl</code>-call at the end.
         {% endblocktrans %}
@@ -88,7 +89,7 @@ borg create --json --stats {{ object.server.host.name }}:{{ object.path }}::"{ho
         To verify that your backup works, you can list all backups in the repository.
         {% endblocktrans %}
         <pre><code>export BORG_PASSPHRASE=&lt;passphrase&gt;
-borg list {{ object.server.host.name }}:{{ object.path }}</code></pre>
+borg list borg.{{ name }}:{{ object.path }}</code></pre>
       </div>
     </div>
     <div class="tab-pane fade" id="step5">
@@ -98,7 +99,7 @@ borg list {{ object.server.host.name }}:{{ object.path }}</code></pre>
         please specify a number of backups for each interval to be kept.
         {% endblocktrans %}
         <pre><code>export BORG_PASSPHRASE=&lt;passphrase&gt;
-borg prune --keep-daily=7 --keep-weekly=4 --keep-monthly=12 --keep-yearly=2 --prefix="{hostname}-" {{ object.server.host.name }}:{{ object.path }}</code></pre>
+borg prune --keep-daily=7 --keep-weekly=4 --keep-monthly=12 --keep-yearly=2 --glob-archives="{hostname}-*" borg.{{ name }}:{{ object.path }}</code></pre>
       </div>
     </div>
     <div class="tab-pane fade" id="step6">
@@ -126,7 +127,7 @@ Description=Run borg backup
 [Service]
 Type=oneshot
 Environment=BORG_PASSPHRASE=&lt;passphrase&gt;
-ExecStart=/usr/bin/sh -c 'borg create --json --stats {{ object.server.host.name }}:{{ object.path }}::"{hostname}-{now}" &lt;path&gt; [&lt;path&gt; ...] |curl -H "Content-Type: application/json" -X POST -d @- {{ request.scheme }}://{{ request.get_host }}{% url "borg:repository-status-update" secret=object.secret %} && borg prune --keep-daily=7 --keep-weekly=4 --keep-monthly=12 --keep-yearly=2 --prefix="{hostname}-" {{ object.server.host.name }}:{{ object.path }}'</code></pre>
+ExecStart=/bin/sh -c 'borg create --json --stats borg.{{ name }}:{{ object.path }}::"{hostname}-{now}" &lt;path&gt; [&lt;path&gt; ...] |curl -H "Content-Type: application/json" -X POST -d @- {{ request.scheme }}://{{ request.get_host }}{% url "borg:repository-status-update" secret=object.secret %} && borg prune --keep-daily=7 --keep-weekly=4 --keep-monthly=12 --keep-yearly=2 --glob-archives="{hostname}-*" borg.{{ name }}:{{ object.path }}'</code></pre>
         {% blocktrans %}
         Again, replace <code>&lt;path&gt;</code> with the path you want to backup and <code>&lt;passphrase&gt;</code> with your secret passphrase.
         {% endblocktrans %}
