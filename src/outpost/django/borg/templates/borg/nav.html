@@ -1,9 +1,11 @@
 {% load i18n %}
 {% if request.user.is_authenticated %}
-<li>
-  <a href="{% url 'borg:repository' %}">
-    <span class="glyphicon glyphicon-duplicate"></span>
-    {% trans 'Backup' %}
+{% if perms.redirect.add_redirecturl or user.is_superuser %}
+<li class="nav-item">
+  <a class="nav-link" href="{% url 'borg:repository' %}" role="button">
+    <i class="fa fa-server" aria-hidden="true"></i>
+    {% trans "Backup" %}
   </a>
 </li>
+{% endif %}
 {% endif %}
